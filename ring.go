@@ -102,7 +102,6 @@ func (r *Ring) Get(key string) (string, error) {
 	if hashKey > n.GetKey() {
 		q = rbt.FindSuccessor(n)
 	}
-	fmt.Println("q: ", hashKey, n)
 	if q != nil {
 		return q.GetValue(), nil
 	}
