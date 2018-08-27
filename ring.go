@@ -101,7 +101,7 @@ func (r *Ring) Get(key string) (string, error) {
 	s := r.store.Search(n.GetKey())
 	var q *rbt.Node
 	if hashKey > n.GetKey() {
-		q = s.Successor()
+		q = rbt.FindSuccessor(s)
 	}
 	if q != nil {
 		return q.GetValue(), nil
