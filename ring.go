@@ -94,7 +94,7 @@ func (r *Ring) Remove(node string) {
 
 func (r *Ring) Get(key string) (string, error) {
 	if r.store.Size() == 0 {
-		return "", errors.New("empty ring")
+		return "", ERR_EMPTY_RING
 	}
 	hashKey := r.hashfn.hash(key)
 	n := r.store.Nearest(hashKey)
