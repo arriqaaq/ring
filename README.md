@@ -1,6 +1,18 @@
-# ring [WIP]
-consistent hashing paper implementation using Red Black tree
+# Ring [WIP]
+Consistent hashing paper implementation using Red Black Tree 
+![ring](http://paperplanes-assets.s3.amazonaws.com/consistent-hashing.png)
 
-	1) Using a red-black tree to store the elements in sorted order. Red-Black 
-	tree guarantees lookups in O(logn) time
-	2) Using xxhash as the hash function
+## Example Usage
+
+```go
+ring:=NewRing([]string{"server-1","server-2","server-3"},1)
+node:=ring.Get("foo")
+```
+
+
+## TODO
+
+- Test cases
+- Performance test for xxhash
+
+Ring Image source: http://paperplanes-assets.s3.amazonaws.com/consistent-hashing.png

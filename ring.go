@@ -98,13 +98,13 @@ func (r *Ring) Get(key string) (string, error) {
 	}
 	hashKey := r.hashfn.hash(key)
 	n := r.store.Nearest(hashKey)
-	s := r.store.Search(n.GetKey())
 	var q *rbt.Node
 	if hashKey > n.GetKey() {
-		q = rbt.FindSuccessor(s)
+		q = rbt.FindSuccessor(n)
 	}
+	fmt.Println("q: ", hashKey, n)
 	if q != nil {
 		return q.GetValue(), nil
 	}
-	return s.GetValue(), nil
+	return n.GetValue(), nil
 }
