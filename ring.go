@@ -5,6 +5,7 @@ import (
 	"fmt"
 	hash1 "github.com/OneOfOne/xxhash"
 	"github.com/arriqaaq/rbt"
+	"sync"
 )
 
 var (
@@ -37,6 +38,8 @@ type Ring struct {
 	nodeMap  map[string]bool
 	replicas int
 	hashfn   hasher
+
+	mu sync.RWMutex
 }
 
 func New() *Ring {
@@ -55,15 +58,19 @@ func NewRing(nodes []string, replicas int) *Ring {
 		replicas: replicas,
 		hashfn:   newXXHash(),
 	}
+	r.mu.Lock()
 	for _, node := range nodes {
 		r.nodeMap[node] = true
 		hashKey := r.hashfn.hash(node)
 		r.store.Insert(hashKey, node)
 	}
+	r.mu.Unlock()
 	return r
 }
 
 func (r *Ring) Add(node string) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
 	if _, ok := r.nodeMap[node]; ok {
 		return
 	}
@@ -79,6 +86,8 @@ func (r *Ring) Add(node string) {
 }
 
 func (r *Ring) Remove(node string) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
 	if _, ok := r.nodeMap[node]; !ok {
 		return
 	}
@@ -93,6 +102,8 @@ func (r *Ring) Remove(node string) {
 }
 
 func (r *Ring) Get(key string) (string, error) {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
 	if r.store.Size() == 0 {
 		return "", ERR_EMPTY_RING
 	}
