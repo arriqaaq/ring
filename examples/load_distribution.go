@@ -8,7 +8,7 @@ import (
 
 func main() {
 	nodes := []string{"a", "b", "c"}
-	hashRing := ring.NewRing(nodes, 40)
+	hashRing := ring.NewRing(nodes, 300)
 
 	keyCount := 1000000
 	distribution := make(map[string]int)
