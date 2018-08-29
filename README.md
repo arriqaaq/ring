@@ -1,4 +1,4 @@
-# Ring [WIP]
+# Ring
 Consistent hashing paper implementation using Red Black Tree 
 ![ring](http://paperplanes-assets.s3.amazonaws.com/consistent-hashing.png)
 
@@ -12,7 +12,7 @@ node:=ring.Get("foo")
 
 ## TODO
 
-- Test cases
+- More test cases
 - Performance test for xxhash
 
 ## Paper

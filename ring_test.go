@@ -9,7 +9,6 @@ func TestNew(t *testing.T) {
 	hashRing := NewRing(nodes, 1)
 
 	expectNodesABC(t, hashRing)
-	// expectNodeRangesABC(t, hashRing)
 }
 
 func expectNodesABC(t *testing.T, hashRing *Ring) {
