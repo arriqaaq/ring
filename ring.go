@@ -34,10 +34,10 @@ func (x xxHash) hash(data string) int64 {
 }
 
 type Ring struct {
-	store    *rbt.Tree
-	nodeMap  map[string]bool
-	replicas int
-	hashfn   hasher
+	store        *rbt.Tree
+	nodeMap      map[string]bool
+	virtualNodes int
+	hashfn       hasher
 
 	mu sync.RWMutex
 }
@@ -51,21 +51,25 @@ func New() *Ring {
 	return r
 }
 
-func NewRing(nodes []string, replicas int) *Ring {
+func NewRing(nodes []string, virtualNodes int) *Ring {
 	r := &Ring{
-		store:    rbt.NewTree(),
-		nodeMap:  make(map[string]bool),
-		replicas: replicas,
-		hashfn:   newXXHash(),
+		store:        rbt.NewTree(),
+		nodeMap:      make(map[string]bool),
+		virtualNodes: virtualNodes,
+		hashfn:       newXXHash(),
 	}
 	r.mu.Lock()
 	for _, node := range nodes {
 		r.nodeMap[node] = true
-		hashKey := r.hashfn.hash(node)
+		hashKey := r.hash(node)
 		r.store.Insert(hashKey, node)
 	}
 	r.mu.Unlock()
 	return r
+}
+
+func (r *Ring) hash(val string) int64 {
+	return r.hashfn.hash(val)
 }
 
 func (r *Ring) Add(node string) {
@@ -75,13 +79,13 @@ func (r *Ring) Add(node string) {
 		return
 	}
 	r.nodeMap[node] = true
-	hashKey := r.hashfn.hash(node)
+	hashKey := r.hash(node)
 	r.store.Insert(hashKey, node)
 
-	for i := 1; i <= r.replicas; i++ {
+	for i := 0; i < r.virtualNodes; i++ {
 		vNodeKey := fmt.Sprintf("%s-%d", node, i)
-		hashKey := r.hashfn.hash(vNodeKey)
-		r.store.Insert(hashKey, vNodeKey)
+		hashKey := r.hash(vNodeKey)
+		r.store.Insert(hashKey, node)
 	}
 }
 
@@ -91,11 +95,12 @@ func (r *Ring) Remove(node string) {
 	if _, ok := r.nodeMap[node]; !ok {
 		return
 	}
-	hashKey := r.hashfn.hash(node)
+	hashKey := r.hash(node)
 	r.store.Delete(hashKey)
-	for i := 1; i <= r.replicas; i++ {
+
+	for i := 0; i < r.virtualNodes; i++ {
 		vNodeKey := fmt.Sprintf("%s-%d", node, i)
-		hashKey := r.hashfn.hash(vNodeKey)
+		hashKey := r.hash(vNodeKey)
 		r.store.Delete(hashKey)
 	}
 	delete(r.nodeMap, node)
@@ -104,17 +109,23 @@ func (r *Ring) Remove(node string) {
 func (r *Ring) Get(key string) (string, error) {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
+
 	if r.store.Size() == 0 {
 		return "", ERR_EMPTY_RING
 	}
-	hashKey := r.hashfn.hash(key)
-	n := r.store.Nearest(hashKey)
+
 	var q *rbt.Node
-	if hashKey > n.GetKey() {
-		q = rbt.FindSuccessor(n)
+	hashKey := r.hash(key)
+	q = r.store.Nearest(hashKey)
+
+	if hashKey > q.GetKey() {
+		g := rbt.FindSuccessor(q)
+		if g != nil {
+			q = g
+		} else {
+			// If no successor found, return root(wrap around)
+			q = r.store.Root()
+		}
 	}
-	if q != nil {
-		return q.GetValue(), nil
-	}
-	return n.GetValue(), nil
+	return q.GetValue(), nil
 }
