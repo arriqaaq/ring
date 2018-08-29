@@ -6,7 +6,7 @@ import (
 
 func TestNew(t *testing.T) {
 	nodes := []string{"a", "b", "c"}
-	hashRing := NewRing(nodes, 1)
+	hashRing := NewRing(nodes, 0)
 
 	expectNodesABC(t, hashRing)
 }

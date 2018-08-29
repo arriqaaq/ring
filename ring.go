@@ -58,13 +58,10 @@ func NewRing(nodes []string, virtualNodes int) *Ring {
 		virtualNodes: virtualNodes,
 		hashfn:       newXXHash(),
 	}
-	r.mu.Lock()
+
 	for _, node := range nodes {
-		r.nodeMap[node] = true
-		hashKey := r.hash(node)
-		r.store.Insert(hashKey, node)
+		r.Add(node)
 	}
-	r.mu.Unlock()
 	return r
 }
 
@@ -84,6 +81,7 @@ func (r *Ring) Add(node string) {
 
 	for i := 0; i < r.virtualNodes; i++ {
 		vNodeKey := fmt.Sprintf("%s-%d", node, i)
+		r.nodeMap[vNodeKey] = true
 		hashKey := r.hash(vNodeKey)
 		r.store.Insert(hashKey, node)
 	}
@@ -102,6 +100,7 @@ func (r *Ring) Remove(node string) {
 		vNodeKey := fmt.Sprintf("%s-%d", node, i)
 		hashKey := r.hash(vNodeKey)
 		r.store.Delete(hashKey)
+		delete(r.nodeMap, vNodeKey)
 	}
 	delete(r.nodeMap, node)
 }
