@@ -123,7 +123,7 @@ func (r *Ring) Get(key string) (string, error) {
 			q = g
 		} else {
 			// If no successor found, return root(wrap around)
-			q = rbt.FindMinimum(r.store)
+			q = r.store.Minimum()
 		}
 	}
 	return q.GetValue(), nil
